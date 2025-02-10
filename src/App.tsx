@@ -4,8 +4,10 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import { Button, Stack } from '@mui/material'
 import MyTabs from './view/tabs'
-import NavigationComponentExample from './view/tabs/NavigationComponentExample'
-import NavigationExample from './view/tabs/NavigationExample'
+import NavigationComponentExample from './view/tabs/NavigationComponentDemo'
+
+import NavigationComponentExample2 from './view/tabs/NavigationComponentExample'
+import StepperExample from './view/Step/StepperExample'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -39,7 +41,10 @@ function App() {
     </Stack>
     <MyTabs/>
     <NavigationComponentExample/>
-    <NavigationExample/>
+    NavigationExample：
+    <NavigationComponentExample2/>
+    steper:
+    <StepperExample/>
     </>
   )
 }

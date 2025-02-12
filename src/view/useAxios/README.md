@@ -1,4 +1,31 @@
 # Axios 请求封装使用说明
+## 参数说明
+### config: AxiosRequestConfig
+请求配置对象，支持所有 axios 配置项：
+{
+  url: string;          // 请求地址
+  method?: string;      // 请求方法
+  params?: object;      // URL 参数
+  data?: any;           // 请求体数据
+  headers?: object;     // 请求头
+  timeout?: number;     // 超时时间
+}
+## options: RequestOptions
+1. 可选的配置项：
+{
+  manual?: boolean;      // 是否手动触发请求，默认 false
+  onSuccess?: (data: T) => void;    // 请求成功回调
+  onError?: (error: Error) => void;  // 请求失败回调
+  initialData?: T | null;    // 初始数据
+}
+2. 返回值说明
+{
+  data: T | null;        // 响应数据
+  loading: boolean;      // 加载状态
+  error: Error | null;   // 错误信息
+  run: (config?: AxiosRequestConfig) => Promise<void>;  // 执行请求方法
+  reset: () => void;     // 重置状态方法
+}
 ## 使用方法
 1. 基础使用
 const { data, loading, error } = useRequest<UserInfo>({
@@ -61,6 +88,31 @@ const { reset } = useRequest({
 // 重置所有状态
 reset();
 ```
+7. 带初始数据的请求
+```
+const { data } = useRequest({
+  url: '/api/user'
+}, {
+  initialData: { name: '默认用户' }
+});
+```
+
+## 注意事项
+1. 自动发起请求
+- 默认情况下，请求会在组件挂载时自动发起
+- 设置 manual: true 可以手动控制请求时机
+2. 错误处理
+- error 状态会自动捕获并处理请求错误
+- 可以通过 onError 回调自定义错误处理
+3. 类型支持
+- 支持泛型定义返回数据类型
+- 建议明确指定数据类型以获得更好的类型提示
+4. 状态管理
+- loading 状态会在请求开始时自动设置
+- 可以通过 reset 方法重置所有状态
+5. 配置合并
+- run 方法支持传入新的配置，会与初始配置合并
+- 新配置优先级高于初始配置
 
 ## 解释
 - 职责分离 ：

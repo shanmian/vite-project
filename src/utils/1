@@ -1,0 +1,108 @@
+import axios from 'axios';
+import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+
+/**
+ * API 响应数据接口
+ * @template T - 响应数据类型
+ */
+export interface ApiResponse<T = any> {
+  code: number;      // 响应状态码
+  data: T;          // 响应数据
+  message: string;   // 响应消息
+}
+
+/**
+ * 创建 axios 实例
+ * 配置基础 URL、超时时间和请求头
+ */
+const instance: AxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// 用于存储每个请求的 CancelToken
+const requestMap = new Map<string, axios.CancelTokenSource>();
+
+/**
+ * 生成请求的唯一标识
+ * @param config - 请求配置
+ * @returns 请求的唯一标识
+ */
+const generateRequestKey = (config: InternalAxiosRequestConfig): string => {
+  return `${config.method}-${config.url}`;
+};
+
+/**
+ * 请求拦截器
+ * 在请求发送前统一处理
+ */
+instance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // 从 localStorage 获取 token
+    const token = localStorage.getItem('token');
+    // 如果存在 token，添加到请求头
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // 生成请求的唯一标识
+    const requestKey = generateRequestKey(config);
+
+    // 如果请求已经存在，则取消之前的请求
+    if (requestMap.has(requestKey)) {
+      const source = requestMap.get(requestKey);
+      source?.cancel('请求被取消，因为发起了新的相同请求');
+      requestMap.delete(requestKey);
+    }
+
+    // 创建新的 CancelToken
+    const source = axios.CancelToken.source();
+    config.cancelToken = source.token;
+
+    // 存储 CancelToken
+    requestMap.set(requestKey, source);
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+/**
+ * 响应拦截器
+ * 统一处理响应数据和错误
+ */
+instance.interceptors.response.use(
+  (response: AxiosResponse<ApiResponse>) => {
+    const { code, data, message } = response.data;
+    // 如果状态码不是 200，抛出错误
+    if (code !== 200) {
+      return Promise.reject(new Error(message || '请求失败'));
+    }
+
+    // 请求成功，移除对应的 CancelToken
+    const requestKey = generateRequestKey(response.config);
+    requestMap.delete(requestKey);
+
+    return data;
+  },
+  (error) => {
+    // 处理 401 未授权错误
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+
+    // 请求失败，移除对应的 CancelToken
+    if (error.config) {
+      const requestKey = generateRequestKey(error.config);
+      requestMap.delete(requestKey);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default instance;

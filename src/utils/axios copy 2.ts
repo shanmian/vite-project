@@ -1,26 +1,16 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-/**
- * Map to store pending requests and their cancel controllers
- * Used to prevent duplicate requests
- */
+// 存储请求标识和取消函数的 Map
 const pendingMap = new Map<string, AbortController>();
 
-/**
- * Generate unique request key
- * @param config - Request configuration
- * @returns String key to identify the request
- */
+// 生成请求标识
 function generateRequestKey(config: InternalAxiosRequestConfig) {
   const { method, url, params, data } = config;
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&');
 }
 
-/**
- * Remove pending request and create new abort controller
- * @param config - Request configuration
- */
+// 取消重复请求
 function removePendingRequest(config: InternalAxiosRequestConfig) {
   const requestKey = generateRequestKey(config);
   if (pendingMap.has(requestKey)) {
@@ -33,35 +23,29 @@ function removePendingRequest(config: InternalAxiosRequestConfig) {
   pendingMap.set(requestKey, controller);
 }
 
-/**
- * Create axios instance with default configuration
- */
 const instance: AxiosInstance = axios.create({
-  baseURL: 'https://jsonplaceholder.typicode.com',
+   baseURL: 'https://jsonplaceholder.typicode.com',
+//  baseURL: 'http://localhost:5173/static',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',  // Disable browser caching
+    'Cache-Control': 'no-cache',  // 添加禁用缓存的头
     'Pragma': 'no-cache'
   }
 });
 
-/**
- * Request interceptor
- * Handle request before it is sent
- */
+// 请求拦截器
 instance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Add timestamp to prevent cache
-    const timestamp = new Date().getTime();
-    config.params = { 
-      ...config.params,
-      _t: timestamp 
-    };
-    // Cancel duplicate requests
+     // 添加时间戳参数，防止缓存
+     const timestamp = new Date().getTime();
+     config.params = { 
+       ...config.params,
+       _t: timestamp 
+     };
+    // 取消重复请求
     removePendingRequest(config);
     
-    // Add authorization token if exists
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -71,26 +55,30 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/**
- * Response interceptor
- * Handle response data and errors
- */
+// 响应拦截器
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Remove request from pending map
+    // 请求完成后，从 pendingMap 中移除
     const requestKey = generateRequestKey(response.config);
     pendingMap.delete(requestKey);
+    //
+    //
+     // 添加响应数据的状态码判断
+     console.log('响应数据',response)
+    //  const { code, message } = response.data;
     
-    return response.data;
+    //  if (code !== 200 || response.status !== 200) {
+    //    return Promise.reject(new Error(message || '请求失败'));
+    //  }
+     return response.data;
   },
   (error) => {
-    // Remove request from pending map on error
+    // 请求错误时，从 pendingMap 中移除
     if (error.config) {
       const requestKey = generateRequestKey(error.config);
       pendingMap.delete(requestKey);
     }
     
-    // Handle unauthorized error
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';

@@ -11,7 +11,7 @@ interface UserInfo {
 const UserExample = () => {
   // 基础用法
   const { data, loading, error } = useRequest<UserInfo>({
-    url: '/user/info',
+    url: '/todos/1',
     method: 'GET'
   });
 
@@ -23,7 +23,7 @@ const UserExample = () => {
     run: fetchUser,
     reset: resetUser
   } = useRequest<UserInfo>({
-    url: '/user/info',
+    url: '/posts',
     method: 'GET'
   }, {
     manual: true,

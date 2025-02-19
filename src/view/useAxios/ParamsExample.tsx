@@ -36,7 +36,7 @@ const ParamsExample = () => {
     method: 'GET',
     params: searchParams
   }, {
-    manual: true,
+    manual: false,
     onSuccess: (data) => {
       console.log('搜索成功：', data);
     },

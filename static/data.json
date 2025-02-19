@@ -1,0 +1,16 @@
+{
+    "code": 200,
+    "message": "success",
+    "data": [
+      {
+        "id": 1,
+        "name": "示例数据1",
+        "description": "这是第一条示例数据的描述"
+      },
+      {
+        "id": 2,
+        "name": "示例数据2",
+        "description": "这是第二条示例数据的描述"
+      }
+    ]
+  }

@@ -1,10 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { AxiosRequestConfig } from 'axios';
-import axios from 'axios';
 import axiosInstance from '../utils/axios';
 
 /**
- * Interface for request options
+ * Request options interface
  * @template T - Response data type
  */
 interface RequestOptions<T> {
@@ -15,21 +14,20 @@ interface RequestOptions<T> {
 }
 
 /**
- * Interface for request result
+ * Request result interface
  * @template T - Response data type
  */
 interface RequestResult<T> {
   data: T | null;        // Response data
   loading: boolean;      // Loading state
-  error: Error | null;   // Error state
-  run: (config?: AxiosRequestConfig) => Promise<T>;  // Execute request method
+  error: Error | null;   // Error information
+  run: (config?: AxiosRequestConfig) => Promise<void>;  // Execute request method
   reset: () => void;     // Reset state method
-  refresh: () => Promise<T>;  // Refresh data method
+  refresh: () => Promise<void>; // Refresh method
 }
 
 /**
- * Custom hook for making HTTP requests
- * @template T - Response data type
+ * Custom request hook
  * @param config - Axios request configuration
  * @param options - Request options
  * @returns Request result object
@@ -38,7 +36,7 @@ function useRequest<T = any>(
   config: AxiosRequestConfig,
   options: RequestOptions<T> = {}
 ): RequestResult<T> {
-  // Extract options with default values
+  // Destructure options with default values
   const { 
     manual = false,      // Manual trigger flag
     onSuccess,           // Success callback
@@ -51,62 +49,27 @@ function useRequest<T = any>(
   const [data, setData] = useState<T | null>(initialData);  // Data state
   const [error, setError] = useState<Error | null>(null);   // Error state
 
-  // Request controller reference
-  const abortControllerRef = useRef<AbortController>();
-
   /**
-   * Execute request with configuration
-   * @param runConfig - Optional runtime configuration
-   * @returns Promise with response data
+   * Execute request method
+   * @param runConfig - Optional runtime configuration, will be merged with initial config
    */
-  const run = useCallback(async (runConfig?: AxiosRequestConfig): Promise<T> => {
-    // Cancel previous request if exists
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new controller
-    abortControllerRef.current = new AbortController();
-    
-    // Merge configurations
-    const finalConfig = { 
-      ...config, 
-      ...runConfig,
-      signal: abortControllerRef.current.signal 
-    };
-
+  const run = useCallback(async (runConfig?: AxiosRequestConfig) => {
+    const finalConfig = { ...config, ...runConfig };
     setLoading(true);
     setError(null);
     
     try {
       const res = await axiosInstance.request<T>(finalConfig);
-      const data = res as T;
-      setData(data);
-      onSuccess?.(data);
-      return data;
+      setData(res as T);
+      onSuccess?.(res as T);
     } catch (err) {
-      if (axios.isCancel(err)) {
-        return Promise.reject(err);
-      }
       const error = err instanceof Error ? err : new Error('Request failed');
       setError(error);
       onError?.(error);
-      throw error;
     } finally {
       setLoading(false);
     }
   }, [config, onSuccess, onError]);
-
-  /**
-   * Cleanup on component unmount
-   */
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
 
   /**
    * Reset all states to initial values
@@ -116,15 +79,12 @@ function useRequest<T = any>(
     setError(null);
     setLoading(false);
   }, [initialData]);
-
-  /**
-   * Refresh data using current configuration
-   */
-  const refresh = useCallback((): Promise<T> => {
+   // 刷新数据
+   const refresh = useCallback(() => {
     return run();
   }, [run]);
 
-  return { data, loading, error, run, reset, refresh };
+  return { data, loading, error, run, reset,refresh};
 }
 
 export default useRequest;

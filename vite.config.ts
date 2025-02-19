@@ -10,4 +10,10 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     globals: true
   },
+   // 添加静态资源配置
+   publicDir: 'static',
+   server: {
+    port: 5173,
+    host: true
+   }
 })

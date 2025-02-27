@@ -1,5 +1,6 @@
 import { BarChart as MuiBarChart } from '@mui/x-charts/BarChart';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Stack, styled } from '@mui/material';
+import { useState } from 'react';
 
 interface SeriesData {
   data: number[];
@@ -18,6 +19,28 @@ interface BarChartProps {
   handleLengedClick?: (event: any, itemData: any) => void;
 }
 
+// 自定义图例项样式
+const LegendItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+  padding: '4px 8px',
+  borderRadius: 4,
+  transition: 'all 0.3s',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    transform: 'scale(1.05)',
+    boxShadow: theme.shadows[2]
+  }
+}));
+
+const LegendColor = styled(Box)({
+  width: 20,
+  height: 20,
+  marginRight: 8,
+  borderRadius: 4,
+});
+
 const BarChart = ({
   series,
   width = 400,
@@ -27,6 +50,21 @@ const BarChart = ({
   onItemClick,
   handleLengedClick
 }: BarChartProps) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // 处理数据，添加高亮效果
+  const chartSeries = series.map((item, index) => ({
+    ...item,
+    color: hoveredIndex === null || hoveredIndex === index 
+      ? item.color 
+      : `${item.color}80`, // 添加透明度
+    valueFormatter: (value: number) => `${value}`,
+    highlightScope: {
+      highlighted: 'item',
+      faded: 'global'
+    }
+  }));
+
   return (
     <Box>
       {title && (
@@ -40,39 +78,52 @@ const BarChart = ({
           data: labels,
           scaleType: 'band'
         }]}
-        series={series.map(item => ({
-          ...item,
-          valueFormatter: (value) => `${value}`,
-          highlightScope: {
-            highlighted: 'item',
-            faded: 'global'
-          }
-        }))}
+        yAxis={[{
+          min: 0,
+          max: 100,
+          tickInterval: [0, 20, 40, 60, 80, 100],
+          valueFormatter: (value: number) => `${value}%`
+        }]}
+        series={chartSeries}
         slotProps={{
           legend: {
-            hidden: false,
-            direction: 'row',
-            position: { vertical: 'bottom', horizontal: 'middle' },
-            padding:8,
-            itemMarkWidth: 20,
-            itemMarkHeight: 20,
-            markGap: 5,
-            itemGap: 10,
-            onItemClick: (event, item) => {
-                handleLengedClick?.(event, item); 
-              }
+            hidden: true // 隐藏默认图例
           }
         }}
-        // barLabel={(item, context) => {
-        //   if ((item.value ?? 0) > 10) {
-        //     return 'High';
-        //   }
-        //   return context.bar.height < 60 ? null : item.value?.toString();
-        // }}
         width={width}
         height={height}
         onItemClick={onItemClick}
       />
+
+      {/* 自定义图例 */}
+      <Stack 
+        direction="row" 
+        spacing={2} 
+        justifyContent="center" 
+        sx={{ mt: 2 }}
+      >
+        {series.map((item, index) => (
+          <LegendItem
+            key={index}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            onClick={(event) => handleLengedClick?.(event, item)}
+          >
+            <LegendColor sx={{ 
+              backgroundColor: item.color,
+              opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.5
+            }} />
+            <Typography 
+              variant="body2"
+              sx={{
+                fontWeight: hoveredIndex === index ? 'bold' : 'normal'
+              }}
+            >
+              {item.label}
+            </Typography>
+          </LegendItem>
+        ))}
+      </Stack>
     </Box>
   );
 };

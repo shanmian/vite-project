@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { PieChart, BarChart } from '../../components/ChartComponent';
-
+import {addChartData} from '../../../static/allchart'
 const ChartExample = () => {
     // 饼图数据
     const pieData = [
@@ -11,12 +11,23 @@ const ChartExample = () => {
     const PieChartTitle = `PieChart ${pieData[0].label}`;
     // 柱状图数据
     const barData = [
-        { data: [4, 2, 5, 4, 1], stack: 'A', label: '系列A1', color: '#2196f3' },
-        { data: [2, 8, 1, 3, 1], stack: 'A', label: '系列A2', color: '#4caf50' }
+        { data: [60], stack: 'A', label: 'No Data', color: '#2196f3' },
+         { data: [40], stack: 'A', label: '60%-pending', color: '#4caf50' }
     ];
 
-    const labels = ['一月', '二月', '三月', '四月', '五月'];
-
+    const labels = ['pending'];
+    const filterChartData = (data: any, filterKeys: string[]) => {
+        const filteredData = {
+          data: data.data.map((item: any) => ({
+            LEVEL_1_KEY: Object.fromEntries(
+              Object.entries(item.LEVEL_1_KEY).filter(([key]) => filterKeys.includes(key))
+            )
+          }))
+        };
+        return filteredData;
+      };
+      const b = ['PFL', 'NAV', 'SOD'];
+      console.log(filterChartData(addChartData,b))
     return (
         <Box sx={{ p: 3 }}>
             <Box sx={{ mb: 4 }}>

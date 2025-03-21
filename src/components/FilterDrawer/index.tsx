@@ -24,7 +24,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import CheckIcon from '@mui/icons-material/Check';
+import { DatePicker, StaticDatePicker } from '@mui/x-date-pickers/';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
@@ -124,7 +125,13 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
     // 收集选择框和日期选择器的值
     Object.keys(filterValues).forEach(key => {
       if (filterValues[key] !== null && filterValues[key] !== undefined && filterValues[key] !== '') {
-        values[key] = filterValues[key];
+        // 对于日期类型，转换为标准格式字符串
+        const filter = filters.find(f => f.id === key);
+        if (filter?.type === 'date' && filterValues[key]) {
+          values[key] = dayjs(filterValues[key]).format('YYYY-MM-DD');
+        } else {
+          values[key] = filterValues[key];
+        }
       }
     });
     
@@ -239,19 +246,6 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
             <Stack spacing={3}>
               {filters.map((filter) => (
                 <Box key={filter.id}>
-
-                  {filter.type === 'date' && (
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DatePicker
-                        label={filter.label}
-                        value={filterValues[filter.id] || null}
-                        onChange={(date) => handleDateChange(filter.id, date)}
-                        slotProps={{ textField: { fullWidth: true } }}
-                      />
-                    </LocalizationProvider>
-                  )}
-
-                  {filter.type === 'list' && filter.listOptions && (
                     <Box>
                       <Typography 
                         variant="subtitle1" 
@@ -268,6 +262,16 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {expandedSelects[filter.id] ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
                           {filter.label}
+                          {filter.type === 'date' && filterValues[filter.id] && (
+                            <Typography 
+                              component="span" 
+                              variant="body2" 
+                              color="primary.main" 
+                              sx={{ ml: 1, display: 'flex', alignItems: 'center' }}
+                            >
+                              <CheckIcon fontSize="small" />
+                            </Typography>
+                          )}
                           {selectedListItems[filter.id]?.length > 0 && (
                             <Typography 
                               component="span" 
@@ -282,10 +286,45 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
                         
                       </Typography>
                       <Collapse in={expandedSelects[filter.id] === true}>
-                        {renderListOptions(filter.id, filter.listOptions)}
+                      {filter.type === 'date' && (
+                          <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, mt: 1 }}>
+                              <Typography variant="body2" sx={{ flex: 1 }}>
+                                {filterValues[filter.id] ? dayjs(filterValues[filter.id]).format('YYYY-MM-DD') : 'MM/DD/YYYY'}
+                              </Typography>
+                              {filterValues[filter.id] && (
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleDateChange(filter.id, null)}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <CloseIcon fontSize="small" />
+                                </IconButton>
+                              )}
+                            </Box>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                              <StaticDatePicker
+                                displayStaticWrapperAs="desktop"
+                                value={filterValues[filter.id] || null}
+                                onChange={(date) => handleDateChange(filter.id, date)}
+                                slotProps={{
+                                  actionBar: {
+                                    actions: ['clear'],
+                                  },
+                                }}
+                              />
+                            </LocalizationProvider>
+                          </Box>
+                      )}
+                        {
+                          filter.type === 'list' && filter.listOptions && (
+                            renderListOptions(filter.id, filter.listOptions)
+                          )
+                        }
+                       
                       </Collapse>
                     </Box>
-                  )}
+                  
                 </Box>
               ))}
             </Stack>

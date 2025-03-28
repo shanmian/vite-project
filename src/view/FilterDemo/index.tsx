@@ -1,45 +1,45 @@
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
-import FilterDrawer from '../../components/FilterDrawer';
+import FilterDrawer from '../../components/FilterDrawer/index';
 
 const FilterDemo = () => {
   // 示例筛选条件
   const filters = [
     {
-        id: 'tags',
-        label: '标签',
+        field: 'tags',
+        headerName: '标签',
         type: 'list',
-        listOptions: Array.from({ length: 15 }, (_, i) => ({
+        options: Array.from({ length: 15 }, (_, i) => ({
           id: `tag-${i + 1}`,
-          label: `标签 ${i + 1}`
+          field: `标签 ${i + 1}`
         }))
       },
       {
-        id: 'tags2',
-        label: '标签2',
+        field: 'tags2',
+        headerName: '标签2',
         type: 'list',
-        listOptions: Array.from({ length: 20 }, (_, i) => ({
+        options: Array.from({ length: 20 }, (_, i) => ({
           id: `tag-${i + 1}`,
-          label: `标签 ${i + 1}`
+          field: `标签 ${i + 1}`
         }))
       },
     {
-      id: 'startDate',
-      label: '开始日期',
+      field: 'startDate',
+      headerName: '开始日期',
       type: 'date' as const
     },
     {
-      id: 'endDate',
-      label: '结束日期',
+      field: 'endDate',
+      headerName: '结束日期',
       type: 'date' as const
     },
     {
-        id: 'tags3',
-        label: '标签3',
+        field: 'tags3',
+        headerName: '标签3',
         type: 'list',
-        listOptions: Array.from({ length: 15 }, (_, i) => ({
+        options: Array.from({ length: 15 }, (_, i) => ({
           id: `tag-${i + 1}`,
-          label: `标签 ${i + 1}`
+          field: `标签 ${i + 1}`
         }))
       },
   ];

@@ -34,7 +34,7 @@ interface FilterOption {
   field: string;
   headerName: string;
   type: 'date' | 'list';
-  options?: Array<{ id: string; headerName: string }>;
+  options?: Array<{ id: string; field: string }>;  // 修改这里，使用 field 而不是 headerName
 }
 
 interface FilterDrawerProps {
@@ -73,12 +73,12 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
     filters.forEach(filter => {
       if (filter.type === 'list' && filter.options) {
         filter.options.forEach(option => {
-          if (option.headerName.toLowerCase().includes(searchTerm)) {
+          if (option.field.toLowerCase().includes(searchTerm)) {  // 修改这里，使用 field 而不是 headerName
             results.push({
               filterField: filter.field,
               filterName: filter.headerName,
               optionId: option.id,
-              optionName: option.headerName
+              optionName: option.field  // 修改这里，使用 field 而不是 headerName
             });
           }
         });
@@ -198,7 +198,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
 
 
   // 渲染列表选项
-  const renderListOptions = (filterField: string, options: Array<{ id: string; headerName: string }>) => {
+  const renderListOptions = (filterField: string, options: Array<{ id: string; field: string }>) => {  // 修改这里，使用 field 而不是 headerName
     const isExpanded = expandedSelects[`list_${filterField}`] || false;
     const showMoreButton = options.length > 10;
     const displayOptions = showMoreButton && !isExpanded ? options.slice(0, 10) : options;
@@ -215,15 +215,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
                 dense
                 onClick={() => handleListItemToggle(filterField, option.id)}
               >
-                {/* <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={isItemSelected}
-                    tabIndex={-1}
-                    disableRipple
-                  />
-                </ListItemIcon> */}
-                <ListItemText primary={option.headerName} />
+                <ListItemText primary={option.field} />  {/* 修改这里，使用 field 而不是 headerName */}
                 {isItemSelected && (
                   <CheckIcon color="primary" fontSize="small" />
                 )}
@@ -238,7 +230,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
               size="small" 
               onClick={(e) => {
                 e.stopPropagation();
-                toggleListExpand(filterId);
+                toggleListExpand(filterField);  // 修改这里，使用 filterField 而不是 filterId
               }}
             >
               {isExpanded ? '收起' : '更多'}
@@ -302,74 +294,100 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
     />
           {/* 搜索框 */}
           <Box sx={{ mb: 2 }}>
-            <Autocomplete
-              freeSolo
-              options={searchResults}
-              getOptionLabel={(option) => 
-                typeof option === 'string' 
-                  ? option 
-                  : `${option.filterName}: ${option.optionName}`
-              }
-              inputValue={searchValue}
-              onInputChange={(_, newValue) => setSearchValue(newValue)}
-              onChange={(_, value) => {
-                if (value && typeof value !== 'string') {
-                  handleSearchResultSelect(value);
-                }
-              }}
-              noOptionsText="NO result found"
-              filterOptions={(x) => x} // 禁用内置过滤，使用我们自己的过滤逻辑
-              open={searchValue.length > 0} // 只有当有搜索内容时才打开下拉框
-              openOnFocus={false} // 防止在获取焦点时自动打开
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Search Filter"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {searchValue ? (
-                          <InputAdornment position="end">
-                            <IconButton
-                              size="small"
-                              onClick={() => setSearchValue('')}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ) : null}
-                        <InputAdornment position="end">
-                          <IconButton 
-                            size="small"
-                            color={searchValue ? "primary" : "default"}
-                          >
-                            <SearchIcon fontSize="small" />
-                          </IconButton>
-                        </InputAdornment>
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                // Extract key from props
-                const { key, ...otherProps } = props;
-                return (
-                  <li key={key} {...otherProps}>
-                    <Typography variant="body2" component="span" sx={{ fontWeight: 'bold' }}>
-                      {option.filterName}:
-                    </Typography>{' '}
-                    <Typography variant="body2" component="span">
-                      {option.optionName}
-                    </Typography>
-                  </li>
-                );
+            <TextField
+              placeholder="Search Filter"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <>
+                    {searchValue ? (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSearchValue('')}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null}
+                    <InputAdornment position="end">
+                      <IconButton 
+                        size="small"
+                        color={searchValue ? "primary" : "default"}
+                      >
+                        <SearchIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  </>
+                ),
               }}
             />
+            
+            {/* 搜索结果列表 */}
+            {searchValue.length > 0 && searchResults.length > 0 && (
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  mt: 1, 
+                  maxHeight: 300, 
+                  overflow: 'auto',
+                  position: 'absolute',
+                  width: 'calc(100% - 48px)', // 减去左右padding
+                  zIndex: 1000
+                }}
+              >
+                <List dense>
+                  {searchResults.map((result, index) => (
+                    <ListItem 
+                      key={`${result.filterField}-${result.optionId}-${index}`}
+                      disablePadding
+                    >
+                      <ListItemButton 
+                        onClick={() => {
+                          handleSearchResultSelect(result);
+                        }}
+                      >
+                        <ListItemText 
+                          primary={
+                            <Box>
+                              <Typography variant="body2" component="span" sx={{ fontWeight: 'bold' }}>
+                                {result.filterName}:
+                              </Typography>{' '}
+                              <Typography variant="body2" component="span">
+                                {result.optionName}
+                              </Typography>
+                            </Box>
+                          } 
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
+            
+            {/* 无搜索结果提示 */}
+            {searchValue.length > 0 && searchResults.length === 0 && (
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  mt: 1, 
+                  p: 2, 
+                  textAlign: 'center',
+                  position: 'absolute',
+                  width: 'calc(100% - 48px)', // 减去左右padding
+                  zIndex: 1000
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  NO result found
+                </Typography>
+              </Paper>
+            )}
           </Box>
 
           {/* 内容区域 */}

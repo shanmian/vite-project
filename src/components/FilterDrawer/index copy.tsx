@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Button, 
   Drawer, 
   Box, 
   IconButton, 
   Typography, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel,
+  SelectChangeEvent,
   Stack,
   List,
   ListItem,
@@ -13,17 +18,13 @@ import {
   ListItemText,
   Checkbox,
   Collapse,
-  TextField,
-  InputAdornment,
-  Autocomplete,
-  Paper
+  OutlinedInput
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CheckIcon from '@mui/icons-material/Check';
-import SearchIcon from '@mui/icons-material/Search';
 import { DatePicker, StaticDatePicker } from '@mui/x-date-pickers/';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -42,62 +43,11 @@ interface FilterDrawerProps {
   onApply: (values: Record<string, any>) => void;
 }
 
-// 搜索结果项类型
-interface SearchResultItem {
-  filterField: string;
-  filterName: string;
-  optionId: string;
-  optionName: string;
-}
-
 const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
   const [open, setOpen] = useState(false);
   const [filterValues, setFilterValues] = useState<Record<string, any>>({});
   const [expandedSelects, setExpandedSelects] = useState<Record<string, boolean>>({});
   const [selectedListItems, setSelectedListItems] = useState<Record<string, string[]>>({});
-  
-  // 搜索相关状态
-  const [searchValue, setSearchValue] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
-
-  // 生成搜索结果
-  useEffect(() => {
-    if (!searchValue.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const results: SearchResultItem[] = [];
-    const searchTerm = searchValue.toLowerCase();
-
-    filters.forEach(filter => {
-      if (filter.type === 'list' && filter.options) {
-        filter.options.forEach(option => {
-          if (option.headerName.toLowerCase().includes(searchTerm)) {
-            results.push({
-              filterField: filter.field,
-              filterName: filter.headerName,
-              optionId: option.id,
-              optionName: option.headerName
-            });
-          }
-        });
-      }
-    });
-
-    setSearchResults(results);
-  }, [searchValue, filters]);
-
-  // 处理搜索结果选择
-  const handleSearchResultSelect = (result: SearchResultItem) => {
-    handleListItemToggle(result.filterField, result.optionId);
-    
-    // 展开对应的筛选项
-    // toggleExpand(result.filterField);
-    
-    // 清空搜索框
-    setSearchValue('');
-  };
 
   // 打开抽屉
   const handleOpen = () => {
@@ -248,14 +198,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
       </List>
     );
   };
-  const top100Films = [
-    { label: 'The Shawshank Redemption', headerName: 1994 },
-    { label: 'The Godfather', headerName: 1972 },
-    { label: 'The Godfather: Part II', headerName: 1974 },
-    { label: 'The Dark Knight', headerName: 2008 },
-    { label: '12 Angry Men', headerName: 1957 },
-    { label: "Schindler's List", headerName: 1993 },
-    { label: 'Pulp Fiction', headerName: 1994 },]
+
   return (
     <>
       {/* 筛选按钮 */}
@@ -289,87 +232,10 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ filters, onApply }) => {
           overflow: 'hidden'
         }}>
           {/* 顶部区域 */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
             <IconButton onClick={handleClose} edge="end">
               <CloseIcon />
             </IconButton>
-          </Box>
-          <Autocomplete
-      disablePortal
-      options={top100Films}
-      sx={{ width: 300 }}
-      renderInput={(params) => <TextField {...params} label="Movie" />}
-    />
-          {/* 搜索框 */}
-          <Box sx={{ mb: 2 }}>
-            <Autocomplete
-              freeSolo
-              options={searchResults}
-              getOptionLabel={(option) => 
-                typeof option === 'string' 
-                  ? option 
-                  : `${option.filterName}: ${option.optionName}`
-              }
-              inputValue={searchValue}
-              onInputChange={(_, newValue) => setSearchValue(newValue)}
-              onChange={(_, value) => {
-                if (value && typeof value !== 'string') {
-                  handleSearchResultSelect(value);
-                }
-              }}
-              noOptionsText="NO result found"
-              filterOptions={(x) => x} // 禁用内置过滤，使用我们自己的过滤逻辑
-              open={searchValue.length > 0} // 只有当有搜索内容时才打开下拉框
-              openOnFocus={false} // 防止在获取焦点时自动打开
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Search Filter"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {searchValue ? (
-                          <InputAdornment position="end">
-                            <IconButton
-                              size="small"
-                              onClick={() => setSearchValue('')}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ) : null}
-                        <InputAdornment position="end">
-                          <IconButton 
-                            size="small"
-                            color={searchValue ? "primary" : "default"}
-                          >
-                            <SearchIcon fontSize="small" />
-                          </IconButton>
-                        </InputAdornment>
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                // Extract key from props
-                const { key, ...otherProps } = props;
-                return (
-                  <li key={key} {...otherProps}>
-                    <Typography variant="body2" component="span" sx={{ fontWeight: 'bold' }}>
-                      {option.filterName}:
-                    </Typography>{' '}
-                    <Typography variant="body2" component="span">
-                      {option.optionName}
-                    </Typography>
-                  </li>
-                );
-              }}
-            />
           </Box>
 
           {/* 内容区域 */}

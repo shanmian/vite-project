@@ -1,14 +1,13 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Checkbox } from './Checkbox';
 import { describe, expect, test, vi } from 'vitest';
-import '@testing-library/jest-dom';
 
 describe('Checkbox 组件', () => {
   // 测试基本渲染
   test('渲染不带标签的复选框', () => {
     render(<Checkbox />);
     const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toBeDefined();
   });
 
   // 测试带标签的复选框
@@ -17,22 +16,22 @@ describe('Checkbox 组件', () => {
     const checkbox = screen.getByRole('checkbox');
     const label = screen.getByText('测试标签');
     
-    expect(checkbox).toBeInTheDocument();
-    expect(label).toBeInTheDocument();
+    expect(checkbox).toBeDefined();
+    expect(label).toBeDefined();
   });
 
   // 测试默认选中状态
   test('默认选中状态正确', () => {
     render(<Checkbox defaultChecked />);
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toBeChecked();
+    const checkbox = screen.getByRole('checkbox')as HTMLInputElement;;
+    expect(checkbox.checked).toBe(true);
   });
 
   // 测试禁用状态
   test('禁用状态正确', () => {
     render(<Checkbox disabled />);
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toBeDisabled();
+    const checkbox = screen.getByRole('checkbox')as HTMLInputElement;;
+    expect(checkbox.disabled).toBe(true);
   });
 
   // 测试标签位置
@@ -40,12 +39,13 @@ describe('Checkbox 组件', () => {
     const { container } = render(<Checkbox label="左侧标签" labelPlacement="start" />);
     // 注意：这里使用 container 查询是因为 labelPlacement 会影响 DOM 结构
     // 实际测试中可能需要更精确的选择器
-    expect(container.firstChild).toHaveTextContent('左侧标签');
+    const content = container.firstChild?.textContent;
+    expect(content?.includes('左侧标签')).toBe(true);
   });
 
   // 测试点击事件
   test('点击触发 onChange 事件', () => {
-    const handleChange = vi.fn(); // 使用 vi.fn() 替代 jest.fn()
+    const handleChange = vi.fn();
     render(<Checkbox onChange={handleChange} />);
     
     const checkbox = screen.getByRole('checkbox');
@@ -61,24 +61,24 @@ describe('Checkbox 组件', () => {
     const { container } = render(<Checkbox color="secondary" />);
     // 注意：这里需要检查 DOM 中的类名，具体类名可能需要根据实际情况调整
     const checkboxElement = container.querySelector('.MuiCheckbox-colorSecondary');
-    expect(checkboxElement).toBeInTheDocument();
+    expect(checkboxElement).not.toBeNull();
   });
 
   // 测试尺寸属性
   test('尺寸属性正确应用', () => {
     const { container } = render(<Checkbox size="small" />);
     const checkboxElement = container.querySelector('.MuiCheckbox-sizeSmall');
-    expect(checkboxElement).toBeInTheDocument();
+    expect(checkboxElement).not.toBeNull();
   });
 
   // 测试受控组件行为
   test('作为受控组件正常工作', () => {
     const { rerender } = render(<Checkbox checked={false} />);
-    let checkbox = screen.getByRole('checkbox');
-    expect(checkbox).not.toBeChecked();
+    let checkbox = screen.getByRole('checkbox')as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
     
     rerender(<Checkbox checked={true} />);
-    checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toBeChecked();
+    checkbox = screen.getByRole('checkbox')as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
   });
 });

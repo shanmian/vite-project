@@ -37,9 +37,14 @@ const meta = {
     disableFuture: { control: 'boolean' },
     disablePast: { control: 'boolean' },
     views: {
-      control: { type: 'multi-select' },
-      options: ['day', 'month', 'year'],
-      description: '可见的日期视图'
+      // control: { type: 'multi-select' },
+      // options: ['day', 'month', 'year'],
+      // description: '可见的日期视图'
+      views: {
+        defaultValue: ['day'],
+        control: { type: 'multi-select' },
+        options: ['day', 'month', 'year']
+      }
     },
     openTo: {
       control: { type: 'select' },

@@ -144,7 +144,7 @@ export const DatePicker = ({
   showTodayButton = true,
   disableFuture = false,
   disablePast = false,
-  views = ['day', 'month', 'year'],
+  views = ['day'],
   openTo = 'day',
   orientation = 'portrait',
   shouldDisableDate,

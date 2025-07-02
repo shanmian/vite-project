@@ -62,6 +62,10 @@ export interface ModalProps {
    * 取消按钮颜色
    */
   cancelButtonColor?: 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
+  /**
+   * 弹窗图标
+   */
+  icon?: React.ReactNode;
 }
 
 /**
@@ -81,6 +85,7 @@ export const Modal = ({
   width = 400,
   okButtonColor = 'primary',
   cancelButtonColor = 'error',
+  icon,
 }: ModalProps) => {
   // 处理确认按钮点击
   const handleOk = () => {
@@ -133,9 +138,12 @@ export const Modal = ({
             py: 2,
           }}
         >
-          <Typography id="modal-title" variant="h6" component="h2">
-            {title}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {icon && <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>{icon}</Box>}
+            <Typography id="modal-title" variant="h6" component="h2">
+              {title}
+            </Typography>
+          </Box>
           {showCloseIcon && (
             <IconButton
               aria-label="close"

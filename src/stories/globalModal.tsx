@@ -1,6 +1,10 @@
 import React, { useState, useCallback, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Modal, ModalProps } from './Modal';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 
 type ModalType = 'info' | 'success' | 'warning' | 'error' | 'confirm';
 
@@ -36,6 +40,14 @@ const defaultCancelColors: Record<ModalType, ModalProps['cancelButtonColor']> = 
   warning: 'error',
   error: 'error',
   confirm: 'error',
+};
+
+const typeIcons: Record<ModalType, React.ReactNode> = {
+  info: <InfoOutlinedIcon color="info" />,
+  success: <CheckCircleOutlineIcon color="success" />,
+  warning: <WarningAmberOutlinedIcon color="warning" />,
+  error: <ErrorOutlineOutlinedIcon color="error" />,
+  confirm: <InfoOutlinedIcon color="primary" />,
 };
 
 let root: ReturnType<typeof createRoot> | null = null;
@@ -82,6 +94,7 @@ function showModal(options: GlobalModalOptions) {
     okButtonColor: options.okButtonColor || defaultOkColors[type],
     cancelButtonColor: options.cancelButtonColor || defaultCancelColors[type],
     width: options.width || 400,
+    icon: options.icon ?? typeIcons[type],
   };
 
   root = createRoot(container);
